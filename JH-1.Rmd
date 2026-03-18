@@ -47,8 +47,14 @@ urls <- unlist(urls)
 texts <- unlist(texts)
 
 # 4. Veces que aparece un enlace
+# Conteo de URLs
+url_counts <- table(urls)
 
-
+#Convertir a data frame
+df_counts <- data.frame(
+url = names(url_counts),
+veces = as.numeric(url_counts)
+)
 
 
 
