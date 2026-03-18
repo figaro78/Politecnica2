@@ -1,0 +1,62 @@
+---
+title: "JH-1"
+output: html_document
+---
+# Instalación de librerias
+install.packages("httr")
+install.packages("XML")
+
+# Validación de librerías
+library(httr)
+library(XML)
+
+# URL objetivo
+url <- "https://www.mediawiki.org/wiki/MediaWiki"
+
+# Descargar HTML
+response <- GET(url)
+
+#Convertir a texto
+html_content <- content(response, as ="text",encoding="UTF-8")
+
+# Parsear a XML
+doc <- htmlParse(html_content)
+
+# 2. Extraer el titulo de la página
+# Extraer el titulo
+title <- xpathSApply(doc,"//tittle",xmlValue)
+title
+
+
+# 3. Extracción de enlaces
+# Nodos
+links_nodes <- xpathSApply(doc, "//a")
+
+#Extraer URLS
+urls <- sapply(links_nodes, xmlGetAttr, "href")
+
+#Extraer texto de la URL
+texts <- sapply(links_nodes,xmlValue)
+
+#Null a NA
+urls[sapply(urls, is.null)] <- NA
+texts[sapply(texts, is.null)] <- NA
+
+# Convertir el vector
+urls <- unlist(urls)
+texts <- unlist(texts)
+
+# 4. Veces que aparece un enlace
+
+
+
+
+
+
+
+
+
+
+
+
+
