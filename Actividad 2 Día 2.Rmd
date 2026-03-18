@@ -1,0 +1,40 @@
+# PARTE 1 Datos Elegantes + Análisis de Datos con Web Scrapping
+
+### Pregunta 1: Descargar la página web de la URL indicada, y almacenarlo en un formato de R apto para ser tratado. El primer paso para realizar tareas de crawling y scraping es poder descargar los datos de la web. Para esto usaremos la capacidad de R y de sus librerías (httr y XML) para descargar webs y almacenarlas en variables que podamos convertir en un formato fácil de analizar (p.e. de HTML a XML).
+
+En este primer paso se descargó la página web objetivo utilizando la función `GET()` del paquete `httr`, lo que permitió realizar una petición HTTP al recurso indicado.
+
+Posteriormente, el contenido de la respuesta se extrajo en formato texto HTML mediante la función `content(..., as = "text")`.
+
+Finalmente, el HTML descargado se transformó en un objeto analizable en R usando la función `htmlParse()` del paquete `XML`, permitiendo así tratar la página como una estructura navegable sobre la que posteriormente se podrán realizar búsquedas mediante XPath.
+
+```{r}
+# Instalar librerías si no están instaladas
+# install.packages("httr")
+# install.packages("XML")
+
+# Cargar librerías
+library(httr)
+library(XML)
+
+# URL de la página a analizar
+url_base <- "https://www.mediawiki.org/wiki/MediaWiki"
+
+# 1. Descargar la página web
+respuesta <- GET(url_base)
+
+# Verificar código de estado HTTP
+respuesta$status_code
+
+# 2. Obtener el contenido HTML como texto
+contenido_html <- content(respuesta, as = "text", encoding = "UTF-8")
+
+# Ver una parte del HTML descargado
+substr(contenido_html, 1, 500)
+
+# 3. Convertir el HTML a un objeto analizable en R
+doc_html <- htmlParse(contenido_html, asText = TRUE)
+
+# Mostrar el tipo de objeto creado
+class(doc_html)
+```
