@@ -402,6 +402,49 @@ doc_html &lt;- htmlParse(contenido_html, asText = TRUE)
 class(doc_html)</code></pre>
 <pre><code>## [1] &quot;HTMLInternalDocument&quot; &quot;HTMLInternalDocument&quot; &quot;XMLInternalDocument&quot; 
 ## [4] &quot;XMLAbstractDocument&quot;</code></pre>
+<pre class="r"><code>if (respuesta$status_code == 200) {
+  contenido_html &lt;- content(respuesta, as = &quot;text&quot;, encoding = &quot;UTF-8&quot;)
+  doc_html &lt;- htmlParse(contenido_html, asText = TRUE)
+  print(&quot;Página descargada y parseada correctamente.&quot;)
+} else {
+  print(paste(&quot;Error al descargar la página. Código:&quot;, respuesta$status_code)) }</code></pre>
+<pre><code>## [1] &quot;Página descargada y parseada correctamente.&quot;</code></pre>
+### Pregunta 2: Analizar el contenido de la web, buscando el título de
+la página (que en HTML se etiqueta como “title”). En las cabeceras web
+encontramos información como el título, los ficheros de estilo visual, y
+meta-información como el nombre del autor de la página, una descripción
+de esta, el tipo de codificación de esta, o palabras clave que indican
+qué tipo de información contiene la página. Una vez descargada la
+página, y convertida a un formato analizable (como XML), buscaremos los
+elementos de tipo “title”. P.e. “
+<title>
+Titulo de Página
+</title>
+<p>”.</p>
+<p>Una vez descargada la página y convertida a un objeto HTML/XML
+tratable en R, se procedió a localizar la etiqueta <code>title</code>
+del documento.</p>
+<p>Para ello se utilizó la función <code>xpathSApply()</code>, indicando
+la expresión XPath <code>//title</code>, que permite buscar cualquier
+nodo de tipo <code>title</code> dentro del documento. Posteriormente,
+mediante <code>xmlValue</code>, se extrajo el contenido textual de dicha
+etiqueta.</p>
+<p>De esta forma se obtuvo el título principal de la página analizada,
+que corresponde a la información de cabecera del documento HTML.</p>
+<pre class="r"><code># Buscar el contenido de la etiqueta &lt;title&gt;
+titulo_pagina &lt;- xpathSApply(doc_html, &quot;//title&quot;, xmlValue)
+
+# Mostrar resultado
+titulo_pagina</code></pre>
+<pre><code>## [1] &quot;MediaWiki&quot;</code></pre>
+<pre class="r"><code>titulo_pagina &lt;- xpathSApply(doc_html, &quot;//title&quot;, xmlValue)
+
+if (length(titulo_pagina) &gt; 0) {
+  print(titulo_pagina[1])
+} else {
+  print(&quot;No se encontró ninguna etiqueta title&quot;)
+}</code></pre>
+<pre><code>## [1] &quot;MediaWiki&quot;</code></pre>
 </div>
 </div>
 

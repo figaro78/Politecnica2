@@ -38,3 +38,38 @@ doc_html <- htmlParse(contenido_html, asText = TRUE)
 # Mostrar el tipo de objeto creado
 class(doc_html)
 ```
+
+```{r}
+if (respuesta$status_code == 200) {
+  contenido_html <- content(respuesta, as = "text", encoding = "UTF-8")
+  doc_html <- htmlParse(contenido_html, asText = TRUE)
+  print("Página descargada y parseada correctamente.")
+} else {
+  print(paste("Error al descargar la página. Código:", respuesta$status_code)) }
+```
+
+### Pregunta 2: Analizar el contenido de la web, buscando el título de la página (que en HTML se etiqueta como “title”). En las cabeceras web encontramos información como el título, los ficheros de estilo visual, y meta-información como el nombre del autor de la página, una descripción de esta, el tipo de codificación de esta, o palabras clave que indican qué tipo de información contiene la página. Una vez descargada la página, y convertida a un formato analizable (como XML), buscaremos los elementos de tipo “title”. P.e. “<title>Titulo de Página</title>”.
+
+Una vez descargada la página y convertida a un objeto HTML/XML tratable en R, se procedió a localizar la etiqueta `title` del documento.
+
+Para ello se utilizó la función `xpathSApply()`, indicando la expresión XPath `//title`, que permite buscar cualquier nodo de tipo `title` dentro del documento. Posteriormente, mediante `xmlValue`, se extrajo el contenido textual de dicha etiqueta.
+
+De esta forma se obtuvo el título principal de la página analizada, que corresponde a la información de cabecera del documento HTML.
+
+```{r}
+# Buscar el contenido de la etiqueta <title>
+titulo_pagina <- xpathSApply(doc_html, "//title", xmlValue)
+
+# Mostrar resultado
+titulo_pagina
+```
+
+```{r}
+titulo_pagina <- xpathSApply(doc_html, "//title", xmlValue)
+
+if (length(titulo_pagina) > 0) {
+  print(titulo_pagina[1])
+} else {
+  print("No se encontró ninguna etiqueta title")
+}
+```
