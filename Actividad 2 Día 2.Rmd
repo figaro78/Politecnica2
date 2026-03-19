@@ -1,6 +1,10 @@
-# PARTE 1 Datos Elegantes + Análisis de Datos con Web Scrapping
+# PARTE 1
 
-### Pregunta 1: Descargar la página web de la URL indicada, y almacenarlo en un formato de R apto para ser tratado. El primer paso para realizar tareas de crawling y scraping es poder descargar los datos de la web. Para esto usaremos la capacidad de R y de sus librerías (httr y XML) para descargar webs y almacenarlas en variables que podamos convertir en un formato fácil de analizar (p.e. de HTML a XML).
+# Datos Elegantes + Análisis de Datos con Web Scrapping
+
+## Pregunta 1: Descargar la página web de la URL indicada, y almacenarlo en un formato de R apto para ser tratado.
+
+### El primer paso para realizar tareas de crawling y scraping es poder descargar los datos de la web. Para esto usaremos la capacidad de R y de sus librerías (httr y XML) para descargar webs y almacenarlas en variables que podamos convertir en un formato fácil de analizar (p.e. de HTML a XML).
 
 En este primer paso se descargó la página web objetivo utilizando la función `GET()` del paquete `httr`, lo que permitió realizar una petición HTTP al recurso indicado.
 
@@ -23,19 +27,19 @@ url_base <- "https://www.mediawiki.org/wiki/MediaWiki"
 # 1. Descargar la página web
 respuesta <- GET(url_base)
 
-# Verificar código de estado HTTP
+# Verifica código de estado HTTP
 respuesta$status_code
 
-# 2. Obtener el contenido HTML como texto
+# 2. Obtiene el contenido HTML como texto
 contenido_html <- content(respuesta, as = "text", encoding = "UTF-8")
 
-# Ver una parte del HTML descargado
+# Visualiza una parte del HTML descargado
 substr(contenido_html, 1, 500)
 
-# 3. Convertir el HTML a un objeto analizable en R
+# 3. Convierte el HTML a un objeto analizable en R
 doc_html <- htmlParse(contenido_html, asText = TRUE)
 
-# Mostrar el tipo de objeto creado
+# Muestra el tipo de objeto creado
 class(doc_html)
 ```
 
@@ -55,10 +59,10 @@ Para ello se utilizó la función `xpathSApply()`, indicando la expresión XPath
 De esta forma se obtuvo el título principal de la página analizada, que corresponde a la información de cabecera del documento HTML.
 
 ```{r}
-# Buscar el contenido de la etiqueta <title>
+# Busca el contenido de la etiqueta <title>
 titulo_pagina <- xpathSApply(doc_html, "//title", xmlValue)
 
-# Mostrar resultado
+# Muestra el resultado
 titulo_pagina
 ```
 
@@ -85,13 +89,13 @@ Dado que algunos elementos pueden contener valores nulos o vacíos, se comprobó
 Finalmente, se construyó un `data.frame` con dos columnas: el texto del enlace y su URL asociada, dejando los datos listos para su análisis posterior.
 
 ```{r}
-# Extraer las URLs de los enlaces (<a href="...">)
+# Extrae las URLs de los enlaces (<a href="...">)
 urls_enlaces <- xpathSApply(doc_html, "//a", xmlGetAttr, "href")
 
-# Extraer el texto visible de los enlaces
+# Extrae el texto visible de los enlaces
 texto_enlaces <- xpathSApply(doc_html, "//a", xmlValue)
 
-# Si xpathSApply devuelve listas por presencia de NULLs, tratarlas
+# Si xpathSApply devuelve listas por presencia de NULLs, las trata
 if (is.list(urls_enlaces)) {
   valores_nulos_url <- sapply(urls_enlaces, is.null)
   urls_enlaces[valores_nulos_url] <- NA
@@ -104,15 +108,15 @@ if (is.list(texto_enlaces)) {
   texto_enlaces <- unlist(texto_enlaces)
 }
 
-# Convertir cadenas vacías en NA para dejarlo más limpio
+# Convierte cadenas vacías en NA para dejarlo más limpio
 urls_enlaces[urls_enlaces == ""] <- NA
 texto_enlaces[texto_enlaces == ""] <- NA
 
-# Ver algunos resultados
+# Visualiza algunos resultados
 head(urls_enlaces)
 head(texto_enlaces)
 
-# Crear una tabla preliminar con texto y URL
+# Crea una tabla preliminar con texto y URL
 enlaces_df <- data.frame(
   texto = texto_enlaces,
   url = urls_enlaces,
@@ -120,4 +124,35 @@ enlaces_df <- data.frame(
 )
 
 head(enlaces_df)
+```
+
+## Pregunta 4: Generar una tabla con cada enlace encontrado, indicando el texto que acompaña el enlace, y el número de veces que aparece un enlace con ese mismo objetivo.
+
+### En este paso nos interesa reunir los datos obtenidos en el anterior paso. Tendremos que comprobar, para cada enlace, cuantas veces aparece.
+
+En este paso se agruparon los enlaces extraídos previamente para calcular cuántas veces aparece cada URL de destino en la página analizada.
+
+Para ello se utilizó la función `table()` sobre la columna de URLs, obteniendo una tabla de frecuencias. Posteriormente, ese recuento se volvió a asignar a cada fila del conjunto de enlaces, de manera que cada registro conserva tanto el texto visible del enlace como el número de veces que su misma URL aparece en la página.
+
+De esta forma, se construyó una tabla final con tres columnas: la URL del enlace, el texto asociado y el número de apariciones de dicho destino.
+
+```{r}
+# Tabla de frecuencias por URL
+frecuencia_urls <- table(enlaces_df$url)
+
+# Añade a cada fila el número de veces que aparece su misma URL
+enlaces_df$veces_visto <- as.numeric(frecuencia_urls[enlaces_df$url])
+
+# Ver tabla resultante
+head(enlaces_df)
+
+# Tabla completa con nombres más claros
+tabla_enlaces <- data.frame(
+  enlace = enlaces_df$url,
+  texto = enlaces_df$texto,
+  visto = enlaces_df$veces_visto,
+  stringsAsFactors = FALSE
+)
+
+head(tabla_enlaces)
 ```

@@ -352,15 +352,20 @@ display: none;
 </div>
 
 
-<div id="parte-1-datos-elegantes-análisis-de-datos-con-web-scrapping" class="section level1">
-<h1>PARTE 1 Datos Elegantes + Análisis de Datos con Web Scrapping</h1>
-<div id="pregunta-1-descargar-la-página-web-de-la-url-indicada-y-almacenarlo-en-un-formato-de-r-apto-para-ser-tratado.-el-primer-paso-para-realizar-tareas-de-crawling-y-scraping-es-poder-descargar-los-datos-de-la-web.-para-esto-usaremos-la-capacidad-de-r-y-de-sus-librerías-httr-y-xml-para-descargar-webs-y-almacenarlas-en-variables-que-podamos-convertir-en-un-formato-fácil-de-analizar-p.e.-de-html-a-xml." class="section level3">
-<h3>Pregunta 1: Descargar la página web de la URL indicada, y
-almacenarlo en un formato de R apto para ser tratado. El primer paso
-para realizar tareas de crawling y scraping es poder descargar los datos
-de la web. Para esto usaremos la capacidad de R y de sus librerías (httr
-y XML) para descargar webs y almacenarlas en variables que podamos
-convertir en un formato fácil de analizar (p.e. de HTML a XML).</h3>
+<div id="parte-1" class="section level1">
+<h1>PARTE 1</h1>
+</div>
+<div id="datos-elegantes-análisis-de-datos-con-web-scrapping" class="section level1">
+<h1>Datos Elegantes + Análisis de Datos con Web Scrapping</h1>
+<div id="pregunta-1-descargar-la-página-web-de-la-url-indicada-y-almacenarlo-en-un-formato-de-r-apto-para-ser-tratado." class="section level2">
+<h2>Pregunta 1: Descargar la página web de la URL indicada, y
+almacenarlo en un formato de R apto para ser tratado.</h2>
+<div id="el-primer-paso-para-realizar-tareas-de-crawling-y-scraping-es-poder-descargar-los-datos-de-la-web.-para-esto-usaremos-la-capacidad-de-r-y-de-sus-librerías-httr-y-xml-para-descargar-webs-y-almacenarlas-en-variables-que-podamos-convertir-en-un-formato-fácil-de-analizar-p.e.-de-html-a-xml." class="section level3">
+<h3>El primer paso para realizar tareas de crawling y scraping es poder
+descargar los datos de la web. Para esto usaremos la capacidad de R y de
+sus librerías (httr y XML) para descargar webs y almacenarlas en
+variables que podamos convertir en un formato fácil de analizar (p.e. de
+HTML a XML).</h3>
 <p>En este primer paso se descargó la página web objetivo utilizando la
 función <code>GET()</code> del paquete <code>httr</code>, lo que
 permitió realizar una petición HTTP al recurso indicado.</p>
@@ -413,6 +418,7 @@ de la página descargada. En ella se observan elementos como
 web se realizó correctamente y que el documento puede ser procesado
 posteriormente.</p>
 <pre><code></code></pre>
+</div>
 </div>
 <div id="pregunta-2-analizar-el-contenido-de-la-web-buscando-el-título-de-la-página-que-en-html-se-etiqueta-como-title." class="section level2">
 <h2>Pregunta 2: Analizar el contenido de la web, buscando el título de
@@ -526,6 +532,58 @@ head(enlaces_df)</code></pre>
 ## 4  Get extensions /wiki/Special:MyLanguage/Category:Extensions
 ## 5       Tech blog              https://techblog.wikimedia.org/
 ## 6      Contribute   /wiki/Special:MyLanguage/How_to_contribute</code></pre>
+</div>
+</div>
+<div id="pregunta-4-generar-una-tabla-con-cada-enlace-encontrado-indicando-el-texto-que-acompaña-el-enlace-y-el-número-de-veces-que-aparece-un-enlace-con-ese-mismo-objetivo." class="section level2">
+<h2>Pregunta 4: Generar una tabla con cada enlace encontrado, indicando
+el texto que acompaña el enlace, y el número de veces que aparece un
+enlace con ese mismo objetivo.</h2>
+<div id="en-este-paso-nos-interesa-reunir-los-datos-obtenidos-en-el-anterior-paso.-tendremos-que-comprobar-para-cada-enlace-cuantas-veces-aparece." class="section level3">
+<h3>En este paso nos interesa reunir los datos obtenidos en el anterior
+paso. Tendremos que comprobar, para cada enlace, cuantas veces
+aparece.</h3>
+<p>En este paso se agruparon los enlaces extraídos previamente para
+calcular cuántas veces aparece cada URL de destino en la página
+analizada.</p>
+<p>Para ello se utilizó la función <code>table()</code> sobre la columna
+de URLs, obteniendo una tabla de frecuencias. Posteriormente, ese
+recuento se volvió a asignar a cada fila del conjunto de enlaces, de
+manera que cada registro conserva tanto el texto visible del enlace como
+el número de veces que su misma URL aparece en la página.</p>
+<p>De esta forma, se construyó una tabla final con tres columnas: la URL
+del enlace, el texto asociado y el número de apariciones de dicho
+destino.</p>
+<pre class="r"><code># Tabla de frecuencias por URL
+frecuencia_urls &lt;- table(enlaces_df$url)
+
+# Añadir a cada fila el número de veces que aparece su misma URL
+enlaces_df$veces_visto &lt;- as.numeric(frecuencia_urls[enlaces_df$url])
+
+# Ver tabla resultante
+head(enlaces_df)</code></pre>
+<pre><code>##             texto                                          url veces_visto
+## 1 Jump to content                                 #bodyContent           1
+## 2       Main page                              /wiki/MediaWiki           5
+## 3   Get MediaWiki                               /wiki/Download           1
+## 4  Get extensions /wiki/Special:MyLanguage/Category:Extensions           1
+## 5       Tech blog              https://techblog.wikimedia.org/           1
+## 6      Contribute   /wiki/Special:MyLanguage/How_to_contribute           2</code></pre>
+<pre class="r"><code># Si quieres verla completa con nombres más claros
+tabla_enlaces &lt;- data.frame(
+  enlace = enlaces_df$url,
+  texto = enlaces_df$texto,
+  visto = enlaces_df$veces_visto,
+  stringsAsFactors = FALSE
+)
+
+head(tabla_enlaces)</code></pre>
+<pre><code>##                                         enlace           texto visto
+## 1                                 #bodyContent Jump to content     1
+## 2                              /wiki/MediaWiki       Main page     5
+## 3                               /wiki/Download   Get MediaWiki     1
+## 4 /wiki/Special:MyLanguage/Category:Extensions  Get extensions     1
+## 5              https://techblog.wikimedia.org/       Tech blog     1
+## 6   /wiki/Special:MyLanguage/How_to_contribute      Contribute     2</code></pre>
 </div>
 </div>
 </div>
