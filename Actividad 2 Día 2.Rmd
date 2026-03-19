@@ -2,8 +2,8 @@
 title: "Actividad Evaluable 2"
 author: "Angel Renato Burga Valdivia"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 # PARTE 1
