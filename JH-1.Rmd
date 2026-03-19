@@ -9,6 +9,19 @@ install.packages("XML")
 # Validación de librerías
 library(httr)
 library(XML)
+library(ggplot2)
+
+
+
+
+#Pregunta 1
+Queremos programar un programa de tipo web scrapping con el que podamos obtener 
+una página web, mediante su URL, y poder analizar su contenido HTML con tal de extraer 
+datos e información específica. 
+Nuestro programa ha de ser capaz de cumplir con los siguientes pasos:
+
+1. Descargar la página web de la URL indicada, y almacenarlo en un formato de R apto para ser tratado. 
+El primer paso para realizar tareas de crawling y scraping es poder descargar los datos de la web. Para esto usaremos la capacidad de R y de sus librerías (httr y XML) para descargar webs y almacenarlas en variables que podamos convertir en un formato fácil de analizar (p.e. de HTML a XML). 
 
 # URL objetivo
 url <- "https://www.mediawiki.org/wiki/MediaWiki"
@@ -16,17 +29,30 @@ url <- "https://www.mediawiki.org/wiki/MediaWiki"
 # Descargar HTML
 response <- GET(url)
 
+#Validar descarga de la web
+substr(html_content, 1, 500)
+
 #Convertir a texto
-html_content <- content(response, as ="text",encoding="UTF-8")
+html_content <- content(response, as ="text", encoding = "UTF-8")
 
 # Parsear a XML
-doc <- htmlParse(html_content)
+library(XML)
+
+doc <- htmlParse(html_content, asText = TRUE, encoding = "UTF-8")
+
+#####
+Pregunta 2
+# Analizar el contenido de la web, buscando el título de la página (que en HTML se etiqueta como “title”). 
+En las cabeceras web encontramos información como el título, los ficheros de estilo visual, y meta-información como el nombre del autor de la página, una descripción de esta, el tipo de codificación de esta, o palabras clave que indican qué tipo de información contiene la página. Una vez descargada la página, y convertida a un formato analizable (como XML), buscaremos los elementos de tipo “title”. P.e. “<title>Titulo de Página</title>”. 
+
 
 # 2. Extraer el titulo de la página
 # Extraer el titulo
-title <- xpathSApply(doc,"//tittle",xmlValue)
+title <- xpathSApply(doc, "//title",xmlValue)
 title
 
+#######
+3. Analizar el contenido de la web, buscando todos los enlaces (que en HTML se etiquetan como “a”), buscando el texto del enlace, así como la URL. Vamos a extraer, usando las funciones de búsqueda XML, todos los enlaces que salen de esta página con tal de listarlos y poder descargarlas más tarde. Sabemos que estos son elementos de tipo “<a>”, que tienen el atributo “href” para indicar la URL del enlace. P.e. “<a href = ‘enlace’>Texto del Enlace</a>”. Del enlace nos quedaremos con la URL de destino y con el valor del enlace (texto del enlace). 
 
 # 3. Extracción de enlaces
 # Nodos
@@ -46,15 +72,45 @@ texts[sapply(texts, is.null)] <- NA
 urls <- unlist(urls)
 texts <- unlist(texts)
 
+
+#
+4. Generar una tabla con cada enlace encontrado, indicando el texto que acompaña el enlace, nùmero de veces que aparece un enlace con ese mismo objetiv
+#
+
+# Crear data frame base
+df_links <- data.frame (
+url = urls,
+texto = texts,
+stringsAsFactors = FALSE
+)
+
+
 # 4. Veces que aparece un enlace
 # Conteo de URLs
-url_counts <- table(urls)
+url_counts <- table(df_links$url)
 
 #Convertir a data frame
-df_counts <- data.frame(
+url_counts_df <- data.frame(
 url = names(url_counts),
-veces = as.numeric(url_counts)
+veces = as.numeric(url_counts),
+stringsAsFactors = FALSE
 )
+
+# Unir el conteo 
+df_final <- merge(df_links, url_counts_df, by ="url")
+
+#Limpiar
+texts <- trimws(texts)
+texts[texts == ""] <- NA
+
+#Ver algunas filas
+head(df_final)
+head (url_counts)
+
+
+
+
+
 
 
 
