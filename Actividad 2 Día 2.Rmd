@@ -1,7 +1,9 @@
 ---
 title: "Actividad Evaluable 2"
 author: "Angel Renato Burga Valdivia"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 # PARTE 1
@@ -167,15 +169,15 @@ head(tabla_enlaces)
 
 ### En este paso podemos usar la función HEAD de la librería “httr”, que en vez de descargarse la página como haría GET, solo consultamos los atributos de la página o fichero destino. HEAD nos retorna una lista de atributos, y de entre estos hay uno llamado “header” que contiene más atributos sobre la página buscada. Si seguimos podemos encontrar el “status_code” en “resultado\$status_code”. El “status_code” nos indica el resultado de la petición de página o fichero. Este código puede indicar que la petición ha sido correcta (200), que no se ha encontrado (404), que el acceso está restringido (403), etc.
 
-#### Tened en cuenta que hay enlaces con la URL relativa, con forma “/xxxxxx/xxxxx/a.html”. 
+#### Tened en cuenta que hay enlaces con la URL relativa, con forma “/xxxxxx/xxxxx/a.html”.
 
-#### En este caso, podemos indicarle como “handle” el dominio de la página que estamos tratando, o añadirle el dominio a la URL con la función “paste”. 
+#### En este caso, podemos indicarle como “handle” el dominio de la página que estamos tratando, o añadirle el dominio a la URL con la función “paste”.
 
-#### Tened en cuenta que puede haber enlaces externos con la URL absoluta, con forma “<http://xxxxxx/xxxx/a.html”> (o https), que los trataremos directamente. 
+#### Tened en cuenta que puede haber enlaces externos con la URL absoluta, con forma “<http://xxxxxx/xxxx/a.html”> (o https), que los trataremos directamente.
 
-#### Tened en cuenta que puede haber enlaces que apunten a subdominios distintos, con forma “//subdominio/xxxx/xxxx/a.html”. 
+#### Tened en cuenta que puede haber enlaces que apunten a subdominios distintos, con forma “//subdominio/xxxx/xxxx/a.html”.
 
-#### En este caso podemos adjuntarle el prefijo “https:” delante, convirtiendo la URL en absoluta. Tened en cuenta URLS internas con tags, como por ejemplo “#search-p”. 
+#### En este caso podemos adjuntarle el prefijo “https:” delante, convirtiendo la URL en absoluta. Tened en cuenta URLS internas con tags, como por ejemplo “#search-p”.
 
 #### Estos apuntan a la misma página en la que estamos, pero diferente altura de página. Equivale a acceder a la URL relativa de la misma página en la que estamos.
 
