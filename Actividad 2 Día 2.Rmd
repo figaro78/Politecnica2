@@ -280,6 +280,8 @@ if (file.exists(archivo_cache)) {
   # Guardar resultado para reutilizarlo
   saveRDS(tabla_enlaces, archivo_cache)
 }
+# Limpieza de datos
+  tabla_enlaces <- tabla_enlaces[!grepl("^#", tabla_enlaces$enlace), ]
 
 # Visualizar resultados
 head(tabla_enlaces)
