@@ -6,9 +6,9 @@ author:
   - "Ofelia Tejada"
   - "Jesus Hurtado"
 output:
-  html_document: default
   pdf_document:
     latex_engine: xelatex
+  html_document: default
 ---
 
 # PARTE 1
@@ -133,6 +133,9 @@ enlaces_df <- data.frame(
   stringsAsFactors = FALSE
 )
 
+# Limpieza de datos
+  enlaces_df <- enlaces_df[!grepl("^#", enlaces_df$url), ]
+
 head(enlaces_df)
 ```
 
@@ -163,6 +166,9 @@ tabla_enlaces <- data.frame(
   visto = enlaces_df$veces_visto,
   stringsAsFactors = FALSE
 )
+
+# Limpieza de datos
+  tabla_enlaces <- tabla_enlaces[!grepl("^#", tabla_enlaces$enlace), ]
 
 head(tabla_enlaces)
 ```
@@ -282,6 +288,8 @@ if (file.exists(archivo_cache)) {
   # Guardar resultado para reutilizarlo
   saveRDS(tabla_enlaces, archivo_cache)
 }
+# Limpieza de datos
+  tabla_enlaces <- tabla_enlaces[!grepl("^#", tabla_enlaces$enlace), ]
 
 # Visualizar resultados
 head(tabla_enlaces)
