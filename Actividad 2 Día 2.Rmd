@@ -58,9 +58,6 @@ class(doc_html)
 
 La salida obtenida al visualizar los primeros caracteres del objeto `contenido_html` corresponde al inicio del código fuente HTML de la página descargada. En ella se observan elementos como `<!DOCTYPE html>` y la apertura de la etiqueta `<html>`, lo que confirma que la descarga del contenido web se realizó correctamente y que el documento puede ser procesado posteriormente.
 
-```         
-```
-
 ## Pregunta 2: Analizar el contenido de la web, buscando el título de la página (que en HTML se etiqueta como “title”).
 
 ### En las cabeceras web encontramos información como el título, los ficheros de estilo visual, y meta-información como el nombre del autor de la página, una descripción de esta, el tipo de codificación de esta, o palabras clave que indican qué tipo de información contiene la página. Una vez descargada la página, y convertida a un formato analizable (como XML), buscaremos los elementos de tipo “title”. P.e. “\<title\>Titulo de Página\</title\>”.
@@ -304,54 +301,6 @@ Posteriormente, se representó mediante histogramas la frecuencia de aparición 
 La separación entre URLs absolutas y relativas resulta útil porque refleja dos comportamientos distintos de la página: la navegación interna del sitio y las referencias externas hacia otros recursos.
 
 ```{r}
-# Clasificar URLs como absolutas o relativas usando la URL original
-tabla_enlaces$tipo_url <- ifelse(
-  grepl("^https?://", tabla_enlaces$enlace),
-  "Absoluta",
-  "Relativa"
-)
-
-# Verificar conteos por tipo
-table(tabla_enlaces$tipo_url)
-
-# Histograma con gráficos base
-hist(
-  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Absoluta"],
-  main = "Frecuencia de aparición de enlaces absolutos",
-  xlab = "Número de apariciones",
-  col = "skyblue",
-  border = "white"
-)
-
-hist(
-  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Relativa"],
-  main = "Frecuencia de aparición de enlaces relativas",
-  xlab = "Número de apariciones",
-  col = "lightgreen",
-  border = "white"
-)
-```
-
-**Versión con qplot**
-
-```{r}
-library(ggplot2)
-
-qplot(
-  x = visto,
-  data = tabla_enlaces,
-  geom = "histogram",
-  facets = . ~ tipo_url,
-  fill = tipo_url,
-  bins = 10
-)
-```
-
-Para comparar la frecuencia de aparición de enlaces absolutos y relativos, se utilizó un boxplot en lugar de un histograma. Este tipo de gráfico permite resumir visualmente la distribución de la variable `visto`, mostrando mediana, dispersión y posibles valores atípicos en cada categoría.
-
-De este modo, se puede comparar de forma más clara si los enlaces relativos o absolutos tienden a repetirse más dentro de la página analizada.
-
-```{r}
 # Clasificar URLs como absolutas o relativas
 tabla_enlaces$tipo_url <- ifelse(
   grepl("^https?://", tabla_enlaces$enlace),
@@ -359,16 +308,24 @@ tabla_enlaces$tipo_url <- ifelse(
   "Relativa"
 )
 
+# Gráfico para comparar frecuencias
 boxplot(
   visto ~ tipo_url,
   data = tabla_enlaces,
-  main = "Frecuencia de aparición por tipo de URL",
+  main = "Frecuencia de enlaces por tipo de URL",
   xlab = "Tipo de URL",
-  ylab = "Frecuencia de aparición",
-  col = c("skyblue", "lightgreen"),
-  horizontal = FALSE
+  ylab = "Frecuencia",
+  col = c("skyblue", "lightgreen")
 )
 ```
+
+El diagrama de caja muestra la distribución de la frecuencia de aparición de enlaces según su tipo (absolutos y relativos).
+
+Se observa que los enlaces relativos presentan una mayor variabilidad en su frecuencia, incluyendo valores atípicos más altos, lo que indica que algunos enlaces internos se repiten con mayor frecuencia dentro de la página.
+
+En contraste, los enlaces absolutos presentan una distribución más uniforme y concentrada en valores bajos, lo que sugiere que los enlaces externos aparecen con menor frecuencia y de manera más dispersa.
+
+Esto refleja el comportamiento típico de una página web, donde los enlaces internos (relativos) son más utilizados para la navegación dentro del sitio, mientras que los enlaces externos (absolutos) se emplean de forma más puntual.
 
 ## Pregunta 2: Un gráfico de barras indicando la suma de enlaces que apuntan a otros dominios o servicios (distinto a <https://www.mediawiki.org> en el caso de ejemplo) vs. la suma de los otros enlaces.
 
@@ -543,95 +500,6 @@ text(
 ```
 
 TODOS LOS GRÁFICOS JUNTOS
-
-```{r}
-# =========================================
-# PREPARACIÓN DE DATOS
-# =========================================
-
-# 1. Clasificación absoluta/relativa
-tabla_enlaces$tipo_url <- ifelse(
-  grepl("^https?://", tabla_enlaces$enlace),
-  "Absoluta",
-  "Relativa"
-)
-
-# 2. Clasificación MediaWiki / Externo
-tabla_enlaces$tipo_dominio <- ifelse(
-  is.na(tabla_enlaces$enlace),
-  NA,
-  ifelse(
-    grepl("^https?://", tabla_enlaces$enlace),
-    ifelse(
-      grepl("^https?://www\\.mediawiki\\.org", tabla_enlaces$enlace),
-      "MediaWiki",
-      "Externo"
-    ),
-    "MediaWiki"
-  )
-)
-
-# Suma de apariciones por dominio
-suma_dominios <- tapply(
-  tabla_enlaces$visto,
-  tabla_enlaces$tipo_dominio,
-  sum,
-  na.rm = TRUE
-)
-
-# Tabla de status
-tabla_status <- table(tabla_enlaces$status, useNA = "ifany")
-porcentaje_status <- prop.table(tabla_status) * 100
-etiquetas_status <- paste0(
-  names(tabla_status),
-  " (",
-  round(porcentaje_status, 1),
-  "%)"
-)
-
-# =========================================
-# INFOGRAFÍA EN UNA SOLA FIGURA
-# =========================================
-
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
-
-# Histograma URLs absolutas
-hist(
-  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Absoluta"],
-  main = "URLs absolutas",
-  xlab = "Frecuencia de aparición",
-  col = "skyblue",
-  border = "white"
-)
-
-# Histograma URLs relativas
-hist(
-  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Relativa"],
-  main = "URLs relativas",
-  xlab = "Frecuencia de aparición",
-  col = "lightgreen",
-  border = "white"
-)
-
-# Barras MediaWiki vs Externo
-barplot(
-  suma_dominios,
-  main = "MediaWiki vs Externo",
-  ylab = "Suma de apariciones",
-  col = c("forestgreen", "tomato")
-)
-
-# Pie chart de status
-pie(
-  tabla_status,
-  labels = etiquetas_status,
-  main = "Status HTTP",
-  col = rainbow(length(tabla_status))
-)
-
-# Restaurar layout
-par(mfrow = c(1, 1))
-```
 
 ```{r}
 # =========================
