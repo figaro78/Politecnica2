@@ -162,21 +162,27 @@ poder examinar las URLs podemos usar expresiones regulares, funciones como
 Para tratar las URLs podemos usar la ayuda de la función “paste”, para manipular 
 cadenas de caracteres y poder añadir prefijos a las URLs si fuera necesario.
 
+library(httr)
+
 
 #Funcion para normalizar la URL
-normalize_url <- function(links, base_url){
-if (is.na(links)) return(NA)
-
-if(grepl("^http, link)){
-return(link)
+normalize_url <- function(link, base_url){
+if (is.na(link)){
+return(NA)
+} else if (grepl("^http", link)) {
+return (link)
 } else if (grepl("^//", link)) {
-return(paste0("https:" link))
-} else if (grepl("^#", links)){
+return (paste0("https:", link))
+} else if (grepl("^#", link)){
 return(base_url)
-} else{
+} else {
 return(paste0(base_url, link))
 }
-}
+} 
+
+
+
+
 
 base <- "https://www.mediawiki.org"
 
@@ -184,15 +190,19 @@ base <- "https://www.mediawiki.org"
 df_final$url_full <- sapply(df_final$url, normalize_url, base_url=base)
 
 #obtener status HTTP
-df_final$status <- sapply(df_final$url_full, function(link){
+df_final$status <- sapply (df_final$url_full, function(link) {
 tryCatch({
 if (is.na(link)) return(NA)
 res <- HEAD(link)
 Sys.sleep(1) 
 status_code(res)
-}, error = function(e) )
-}
+}, error = function(e){
+NA
+})
+})
 
+table(df_final$status, useNA = "ifany")
+head(df_final[, c("url", "url_full", "status")], 10)
 
 
 
