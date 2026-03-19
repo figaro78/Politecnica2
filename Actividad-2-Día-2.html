@@ -372,11 +372,14 @@ en R usando la función <code>htmlParse()</code> del paquete
 <code>XML</code>, permitiendo así tratar la página como una estructura
 navegable sobre la que posteriormente se podrán realizar búsquedas
 mediante XPath.</p>
-<pre class="r"><code># Instalar librerías si no están instaladas
-# install.packages(&quot;httr&quot;)
-# install.packages(&quot;XML&quot;)
-
-# Cargar librerías
+<pre class="r"><code># Instalar librerías 
+install.packages(&quot;httr&quot;)</code></pre>
+<pre><code>## Installing package into &#39;/cloud/lib/x86_64-pc-linux-gnu-library/4.5&#39;
+## (as &#39;lib&#39; is unspecified)</code></pre>
+<pre class="r"><code>install.packages(&quot;XML&quot;)</code></pre>
+<pre><code>## Installing package into &#39;/cloud/lib/x86_64-pc-linux-gnu-library/4.5&#39;
+## (as &#39;lib&#39; is unspecified)</code></pre>
+<pre class="r"><code># Cargar librerías
 library(httr)
 library(XML)
 
@@ -402,25 +405,26 @@ doc_html &lt;- htmlParse(contenido_html, asText = TRUE)
 class(doc_html)</code></pre>
 <pre><code>## [1] &quot;HTMLInternalDocument&quot; &quot;HTMLInternalDocument&quot; &quot;XMLInternalDocument&quot; 
 ## [4] &quot;XMLAbstractDocument&quot;</code></pre>
-<pre class="r"><code>if (respuesta$status_code == 200) {
-  contenido_html &lt;- content(respuesta, as = &quot;text&quot;, encoding = &quot;UTF-8&quot;)
-  doc_html &lt;- htmlParse(contenido_html, asText = TRUE)
-  print(&quot;Página descargada y parseada correctamente.&quot;)
-} else {
-  print(paste(&quot;Error al descargar la página. Código:&quot;, respuesta$status_code)) }</code></pre>
-<pre><code>## [1] &quot;Página descargada y parseada correctamente.&quot;</code></pre>
-### Pregunta 2: Analizar el contenido de la web, buscando el título de
-la página (que en HTML se etiqueta como “title”). En las cabeceras web
-encontramos información como el título, los ficheros de estilo visual, y
-meta-información como el nombre del autor de la página, una descripción
-de esta, el tipo de codificación de esta, o palabras clave que indican
-qué tipo de información contiene la página. Una vez descargada la
-página, y convertida a un formato analizable (como XML), buscaremos los
-elementos de tipo “title”. P.e. “
-<title>
-Titulo de Página
-</title>
-<p>”.</p>
+<p>La salida obtenida al visualizar los primeros caracteres del objeto
+<code>contenido_html</code> corresponde al inicio del código fuente HTML
+de la página descargada. En ella se observan elementos como
+<code>&lt;!DOCTYPE html&gt;</code> y la apertura de la etiqueta
+<code>&lt;html&gt;</code>, lo que confirma que la descarga del contenido
+web se realizó correctamente y que el documento puede ser procesado
+posteriormente.</p>
+<pre><code></code></pre>
+</div>
+<div id="pregunta-2-analizar-el-contenido-de-la-web-buscando-el-título-de-la-página-que-en-html-se-etiqueta-como-title." class="section level2">
+<h2>Pregunta 2: Analizar el contenido de la web, buscando el título de
+la página (que en HTML se etiqueta como “title”).</h2>
+<div id="en-las-cabeceras-web-encontramos-información-como-el-título-los-ficheros-de-estilo-visual-y-meta-información-como-el-nombre-del-autor-de-la-página-una-descripción-de-esta-el-tipo-de-codificación-de-esta-o-palabras-clave-que-indican-qué-tipo-de-información-contiene-la-página.-una-vez-descargada-la-página-y-convertida-a-un-formato-analizable-como-xml-buscaremos-los-elementos-de-tipo-title.-p.e.-titletitulo-de-páginatitle." class="section level3">
+<h3>En las cabeceras web encontramos información como el título, los
+ficheros de estilo visual, y meta-información como el nombre del autor
+de la página, una descripción de esta, el tipo de codificación de esta,
+o palabras clave que indican qué tipo de información contiene la página.
+Una vez descargada la página, y convertida a un formato analizable (como
+XML), buscaremos los elementos de tipo “title”. P.e.
+“&lt;title&gt;Titulo de Página&lt;/title&gt;”.</h3>
 <p>Una vez descargada la página y convertida a un objeto HTML/XML
 tratable en R, se procedió a localizar la etiqueta <code>title</code>
 del documento.</p>
@@ -445,6 +449,84 @@ if (length(titulo_pagina) &gt; 0) {
   print(&quot;No se encontró ninguna etiqueta title&quot;)
 }</code></pre>
 <pre><code>## [1] &quot;MediaWiki&quot;</code></pre>
+</div>
+</div>
+<div id="pregunta-3-analizar-el-contenido-de-la-web-buscando-todos-los-enlaces-que-en-html-se-etiquetan-como-a-buscando-el-texto-del-enlace-así-como-la-url." class="section level2">
+<h2>Pregunta 3: Analizar el contenido de la web, buscando todos los
+enlaces (que en HTML se etiquetan como “a”), buscando el texto del
+enlace, así como la URL.</h2>
+<div id="vamos-a-extraer-usando-las-funciones-de-búsqueda-xml-todos-los-enlaces-que-salen-de-esta-página-con-tal-de-listarlos-y-poder-descargarlas-más-tarde.-sabemos-que-estos-son-elementos-de-tipo-a-que-tienen-el-atributo-href-para-indicar-la-url-del-enlace.-p.e.-a-href-enlacetexto-del-enlacea.-del-enlace-nos-quedaremos-con-la-url-de-destino-y-con-el-valor-del-enlace-texto-del-enlace." class="section level3">
+<h3>Vamos a extraer, usando las funciones de búsqueda XML, todos los
+enlaces que salen de esta página con tal de listarlos y poder
+descargarlas más tarde. Sabemos que estos son elementos de tipo
+“&lt;a&gt;”, que tienen el atributo “href” para indicar la URL del
+enlace. P.e. “&lt;a href = ‘enlace’&gt;Texto del Enlace&lt;/a&gt;”. Del
+enlace nos quedaremos con la URL de destino y con el valor del enlace
+(texto del enlace).</h3>
+<p>En este paso se extrajeron todos los enlaces presentes en la página
+HTML, identificados mediante la etiqueta <code>&lt;a&gt;</code>.</p>
+<p>Para ello se utilizó la función <code>xpathSApply()</code> sobre el
+documento parseado, buscando por un lado el atributo <code>href</code>
+de cada enlace, que contiene la URL de destino, y por otro el valor
+textual del nodo, que corresponde al texto visible del enlace.</p>
+<p>Dado que algunos elementos pueden contener valores nulos o vacíos, se
+comprobó si el resultado devuelto por <code>xpathSApply()</code> era una
+lista, en cuyo caso se localizaron los <code>NULL</code>, se
+sustituyeron por <code>NA</code> y se transformó la lista en un vector
+mediante <code>unlist()</code>.</p>
+<p>Finalmente, se construyó un <code>data.frame</code> con dos columnas:
+el texto del enlace y su URL asociada, dejando los datos listos para su
+análisis posterior.</p>
+<pre class="r"><code># Extraer las URLs de los enlaces (&lt;a href=&quot;...&quot;&gt;)
+urls_enlaces &lt;- xpathSApply(doc_html, &quot;//a&quot;, xmlGetAttr, &quot;href&quot;)
+
+# Extraer el texto visible de los enlaces
+texto_enlaces &lt;- xpathSApply(doc_html, &quot;//a&quot;, xmlValue)
+
+# Si xpathSApply devuelve listas por presencia de NULLs, tratarlas
+if (is.list(urls_enlaces)) {
+  valores_nulos_url &lt;- sapply(urls_enlaces, is.null)
+  urls_enlaces[valores_nulos_url] &lt;- NA
+  urls_enlaces &lt;- unlist(urls_enlaces)
+}
+
+if (is.list(texto_enlaces)) {
+  valores_nulos_texto &lt;- sapply(texto_enlaces, is.null)
+  texto_enlaces[valores_nulos_texto] &lt;- NA
+  texto_enlaces &lt;- unlist(texto_enlaces)
+}
+
+# Convertir cadenas vacías en NA para dejarlo más limpio
+urls_enlaces[urls_enlaces == &quot;&quot;] &lt;- NA
+texto_enlaces[texto_enlaces == &quot;&quot;] &lt;- NA
+
+# Ver algunos resultados
+head(urls_enlaces)</code></pre>
+<pre><code>## [1] &quot;#bodyContent&quot;                                
+## [2] &quot;/wiki/MediaWiki&quot;                             
+## [3] &quot;/wiki/Download&quot;                              
+## [4] &quot;/wiki/Special:MyLanguage/Category:Extensions&quot;
+## [5] &quot;https://techblog.wikimedia.org/&quot;             
+## [6] &quot;/wiki/Special:MyLanguage/How_to_contribute&quot;</code></pre>
+<pre class="r"><code>head(texto_enlaces)</code></pre>
+<pre><code>## [1] &quot;Jump to content&quot; &quot;Main page&quot;       &quot;Get MediaWiki&quot;   &quot;Get extensions&quot; 
+## [5] &quot;Tech blog&quot;       &quot;Contribute&quot;</code></pre>
+<pre class="r"><code># Crear una tabla preliminar con texto y URL
+enlaces_df &lt;- data.frame(
+  texto = texto_enlaces,
+  url = urls_enlaces,
+  stringsAsFactors = FALSE
+)
+
+head(enlaces_df)</code></pre>
+<pre><code>##             texto                                          url
+## 1 Jump to content                                 #bodyContent
+## 2       Main page                              /wiki/MediaWiki
+## 3   Get MediaWiki                               /wiki/Download
+## 4  Get extensions /wiki/Special:MyLanguage/Category:Extensions
+## 5       Tech blog              https://techblog.wikimedia.org/
+## 6      Contribute   /wiki/Special:MyLanguage/How_to_contribute</code></pre>
+</div>
 </div>
 </div>
 

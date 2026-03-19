@@ -9,9 +9,9 @@ Posteriormente, el contenido de la respuesta se extrajo en formato texto HTML me
 Finalmente, el HTML descargado se transformó en un objeto analizable en R usando la función `htmlParse()` del paquete `XML`, permitiendo así tratar la página como una estructura navegable sobre la que posteriormente se podrán realizar búsquedas mediante XPath.
 
 ```{r}
-# Instalar librerías si no están instaladas
-# install.packages("httr")
-# install.packages("XML")
+# Instalar librerías 
+install.packages("httr")
+install.packages("XML")
 
 # Cargar librerías
 library(httr)
@@ -39,16 +39,14 @@ doc_html <- htmlParse(contenido_html, asText = TRUE)
 class(doc_html)
 ```
 
-```{r}
-if (respuesta$status_code == 200) {
-  contenido_html <- content(respuesta, as = "text", encoding = "UTF-8")
-  doc_html <- htmlParse(contenido_html, asText = TRUE)
-  print("Página descargada y parseada correctamente.")
-} else {
-  print(paste("Error al descargar la página. Código:", respuesta$status_code)) }
+La salida obtenida al visualizar los primeros caracteres del objeto `contenido_html` corresponde al inicio del código fuente HTML de la página descargada. En ella se observan elementos como `<!DOCTYPE html>` y la apertura de la etiqueta `<html>`, lo que confirma que la descarga del contenido web se realizó correctamente y que el documento puede ser procesado posteriormente.
+
+```         
 ```
 
-### Pregunta 2: Analizar el contenido de la web, buscando el título de la página (que en HTML se etiqueta como “title”). En las cabeceras web encontramos información como el título, los ficheros de estilo visual, y meta-información como el nombre del autor de la página, una descripción de esta, el tipo de codificación de esta, o palabras clave que indican qué tipo de información contiene la página. Una vez descargada la página, y convertida a un formato analizable (como XML), buscaremos los elementos de tipo “title”. P.e. “<title>Titulo de Página</title>”.
+## Pregunta 2: Analizar el contenido de la web, buscando el título de la página (que en HTML se etiqueta como “title”).
+
+### En las cabeceras web encontramos información como el título, los ficheros de estilo visual, y meta-información como el nombre del autor de la página, una descripción de esta, el tipo de codificación de esta, o palabras clave que indican qué tipo de información contiene la página. Una vez descargada la página, y convertida a un formato analizable (como XML), buscaremos los elementos de tipo “title”. P.e. “\<title\>Titulo de Página\</title\>”.
 
 Una vez descargada la página y convertida a un objeto HTML/XML tratable en R, se procedió a localizar la etiqueta `title` del documento.
 
@@ -72,4 +70,54 @@ if (length(titulo_pagina) > 0) {
 } else {
   print("No se encontró ninguna etiqueta title")
 }
+```
+
+## Pregunta 3: Analizar el contenido de la web, buscando todos los enlaces (que en HTML se etiquetan como “a”), buscando el texto del enlace, así como la URL.
+
+### Vamos a extraer, usando las funciones de búsqueda XML, todos los enlaces que salen de esta página con tal de listarlos y poder descargarlas más tarde. Sabemos que estos son elementos de tipo “\<a\>”, que tienen el atributo “href” para indicar la URL del enlace. P.e. “\<a href = ‘enlace’\>Texto del Enlace\</a\>”. Del enlace nos quedaremos con la URL de destino y con el valor del enlace (texto del enlace).
+
+En este paso se extrajeron todos los enlaces presentes en la página HTML, identificados mediante la etiqueta `<a>`.
+
+Para ello se utilizó la función `xpathSApply()` sobre el documento parseado, buscando por un lado el atributo `href` de cada enlace, que contiene la URL de destino, y por otro el valor textual del nodo, que corresponde al texto visible del enlace.
+
+Dado que algunos elementos pueden contener valores nulos o vacíos, se comprobó si el resultado devuelto por `xpathSApply()` era una lista, en cuyo caso se localizaron los `NULL`, se sustituyeron por `NA` y se transformó la lista en un vector mediante `unlist()`.
+
+Finalmente, se construyó un `data.frame` con dos columnas: el texto del enlace y su URL asociada, dejando los datos listos para su análisis posterior.
+
+```{r}
+# Extraer las URLs de los enlaces (<a href="...">)
+urls_enlaces <- xpathSApply(doc_html, "//a", xmlGetAttr, "href")
+
+# Extraer el texto visible de los enlaces
+texto_enlaces <- xpathSApply(doc_html, "//a", xmlValue)
+
+# Si xpathSApply devuelve listas por presencia de NULLs, tratarlas
+if (is.list(urls_enlaces)) {
+  valores_nulos_url <- sapply(urls_enlaces, is.null)
+  urls_enlaces[valores_nulos_url] <- NA
+  urls_enlaces <- unlist(urls_enlaces)
+}
+
+if (is.list(texto_enlaces)) {
+  valores_nulos_texto <- sapply(texto_enlaces, is.null)
+  texto_enlaces[valores_nulos_texto] <- NA
+  texto_enlaces <- unlist(texto_enlaces)
+}
+
+# Convertir cadenas vacías en NA para dejarlo más limpio
+urls_enlaces[urls_enlaces == ""] <- NA
+texto_enlaces[texto_enlaces == ""] <- NA
+
+# Ver algunos resultados
+head(urls_enlaces)
+head(texto_enlaces)
+
+# Crear una tabla preliminar con texto y URL
+enlaces_df <- data.frame(
+  texto = texto_enlaces,
+  url = urls_enlaces,
+  stringsAsFactors = FALSE
+)
+
+head(enlaces_df)
 ```
