@@ -76,6 +76,11 @@ texts <- unlist(texts)
 #
 4. Generar una tabla con cada enlace encontrado, indicando el texto que acompaña el enlace, nùmero de veces que aparece un enlace con ese mismo objetiv
 #
+#Limpiar
+texts <- gsub("[\r\n\t]+", " ", texts)
+texts <- gsub("\\s+", " ", texts)
+texts <- trimws(texts)
+texts[texts == ""] <- NA
 
 # Crear data frame base
 df_links <- data.frame (
@@ -83,6 +88,21 @@ url = urls,
 texto = texts,
 stringsAsFactors = FALSE
 )
+
+# Eliminar URLS vacias
+df_links <- df_links[!is.na(df_links$url) & df_links$url !="", ]
+
+#Filtro de datos sucios
+
+df_links <- df_links[
+!is.na(df_links$url) &
+df_links$url != "" &
+df_links$url != "#" &
+!is.na(df_links$texto),
+]
+
+#Filtro de textos pequeños
+df_links <- df_links[nchar(df_links$texto) > 2, ]
 
 
 # 4. Veces que aparece un enlace
@@ -99,22 +119,80 @@ stringsAsFactors = FALSE
 # Unir el conteo 
 df_final <- merge(df_links, url_counts_df, by ="url")
 
-#Limpiar
-texts <- trimws(texts)
-texts[texts == ""] <- NA
+
 
 #Ver algunas filas
-head(df_final)
+df_final <- df_final[order(-df_final$veces), ]
+head(df_final, 10)
 head (url_counts)
 
 
+# 5 Para cada enlace, seguirlo e indicar si está activo (podemos usar el código de  status HTTP al hacer una petición a esa URL). 
+En este paso podemos usar la función HEAD de la librería “httr”, que en vez de 
+descargarse la página como haría GET, solo consultamos los atributos de la 
+página o fichero destino. 
+HEAD nos retorna una lista de atributos, y de entre estos hay uno llamado 
+“header” que contiene más atributos sobre la página buscada. Si seguimos 
+podemos encontrar el “status_code” en “resultado$status_code”. El 
+“status_code” nos indica el resultado de la petición de página o fichero. Este 
+código puede indicar que la petición ha sido correcta (200), que no se ha 
+encontrado (404), que el acceso está restringido (403), etc. 
+Actividad Evaluable 2 
+3 
+Seminario Internacional en Herramientas y Técnicas de Detección de Ciberamenazas - 2026 
+• Tened en cuenta que hay enlaces con la URL relativa, con forma 
+“/xxxxxx/xxxxx/a.html”. En este caso, podemos indicarle como “handle” el 
+dominio de la página que estamos tratando, o añadirle el dominio a la URL 
+con la función “paste”.  
+• Tened en cuenta que puede haber enlaces externos con la URL absoluta, con 
+forma “http://xxxxxx/xxxx/a.html” (o https), que los trataremos 
+directamente. 
+• Tened en cuenta que puede haber enlaces que apunten a subdominios 
+distintos, con forma “//subdominio/xxxx/xxxx/a.html”. En este caso 
+podemos adjuntarle el prefijo “https:” delante, convirtiendo la URL en 
+absoluta. 
+• Tened en cuenta URLS internas con tags, como por ejemplo “#search-p”. 
+Estos apuntan a la misma página en la que estamos, pero diferente altura de 
+página. Equivale a acceder a la URL relativa de la misma página en la que 
+estamos. 
+Es recomendado poner un tiempo de espera entre petición y petición de pocos 
+segundos (comando “Sys.sleep”), para evitar ser “baneados” por el servidor. Para 
+poder examinar las URLs podemos usar expresiones regulares, funciones como 
+“grep”, o mirar si en los primeros caracteres de la URL encontramos “//” o “http”. 
+Para tratar las URLs podemos usar la ayuda de la función “paste”, para manipular 
+cadenas de caracteres y poder añadir prefijos a las URLs si fuera necesario.
 
 
 
+#Funcion para normalizar la URL
+normalize_url <- function(links, base_url){
+if (is.na(links)) return(NA)
 
+if(grepl("^http, link)){
+return(link)
+} else if (grepl("^//", link)) {
+return(paste0("https:" link))
+} else if (grepl("^#", links)){
+return(base_url)
+} else{
+return(paste0(base_url, link))
+}
+}
 
+base <- "https://www.mediawiki.org"
 
+#Aplicar normalizacion
+df_final$url_full <- sapply(df_final$url, normalize_url, base_url=base)
 
+#obtener status HTTP
+df_final$status <- sapply(df_final$url_full, function(link){
+tryCatch({
+if (is.na(link)) return(NA)
+res <- HEAD(link)
+Sys.sleep(1) 
+status_code(res)
+}, error = function(e) )
+}
 
 
 
