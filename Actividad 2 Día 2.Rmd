@@ -1,9 +1,12 @@
 ---
-title: "Actividad Evaluable 2"
-author: "Angel Renato Burga Valdivia"
+title: "Actividad Evaluable 2 - Grupo 1"
+author:
+  - "Angel Burga"
+  - "Fidel Garcia"
+  - "Ofelia Tejada"
+  - "Jesus Hurtado"
 output: html_document
 ---
-
 # PARTE 1
 
 # Datos Elegantes + Análisis de Datos con Web Scrapping
