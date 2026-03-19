@@ -1,9 +1,22 @@
 ---
+<<<<<<< HEAD
 title: "Actividad Evaluable 2"
 author: "Angel Renato Burga Valdivia"
 output:
   pdf_document: default
   html_document: default
+=======
+title: "Actividad Evaluable 2 - Grupo 1"
+author:
+  - "Angel Burga"
+  - "Fidel Garcia"
+  - "Ofelia Tejada"
+  - "Jesus Hurtado"
+output:
+  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+>>>>>>> 7ab8f02009f44ae634a15383efc203374db00882
 ---
 
 # PARTE 1
@@ -285,4 +298,436 @@ if (file.exists(archivo_cache)) {
 
 # Visualizar resultados
 head(tabla_enlaces)
+```
+
+# PARTE 2
+
+## Pregunta 1: Un histograma con la frecuencia de aparición de los enlaces, pero separado por URLs absolutas (con “http…”) y URLs relativas.
+
+Para este primer gráfico se clasificaron los enlaces en dos categorías:
+
+-   **URLs absolutas**, aquellas que comienzan por `http://` o `https://`
+-   **URLs relativas**, aquellas que dependen del dominio base de la página
+
+Posteriormente, se representó mediante histogramas la frecuencia de aparición de los enlaces (`visto`), separando ambos tipos. Esto permite comparar cómo se distribuyen las repeticiones de enlaces internos frente a enlaces externos o completamente definidos.
+
+La separación entre URLs absolutas y relativas resulta útil porque refleja dos comportamientos distintos de la página: la navegación interna del sitio y las referencias externas hacia otros recursos.
+
+```{r}
+# Clasificar URLs como absolutas o relativas usando la URL original
+tabla_enlaces$tipo_url <- ifelse(
+  grepl("^https?://", tabla_enlaces$enlace),
+  "Absoluta",
+  "Relativa"
+)
+
+# Verificar conteos por tipo
+table(tabla_enlaces$tipo_url)
+
+# Histograma con gráficos base
+hist(
+  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Absoluta"],
+  main = "Frecuencia de aparición de enlaces absolutos",
+  xlab = "Número de apariciones",
+  col = "skyblue",
+  border = "white"
+)
+
+hist(
+  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Relativa"],
+  main = "Frecuencia de aparición de enlaces relativas",
+  xlab = "Número de apariciones",
+  col = "lightgreen",
+  border = "white"
+)
+```
+
+**Versión con qplot**
+
+```{r}
+library(ggplot2)
+
+qplot(
+  x = visto,
+  data = tabla_enlaces,
+  geom = "histogram",
+  facets = . ~ tipo_url,
+  fill = tipo_url,
+  bins = 10
+)
+```
+
+Para comparar la frecuencia de aparición de enlaces absolutos y relativos, se utilizó un boxplot en lugar de un histograma. Este tipo de gráfico permite resumir visualmente la distribución de la variable `visto`, mostrando mediana, dispersión y posibles valores atípicos en cada categoría.
+
+De este modo, se puede comparar de forma más clara si los enlaces relativos o absolutos tienden a repetirse más dentro de la página analizada.
+
+```{r}
+# Clasificar URLs como absolutas o relativas
+tabla_enlaces$tipo_url <- ifelse(
+  grepl("^https?://", tabla_enlaces$enlace),
+  "Absoluta",
+  "Relativa"
+)
+
+boxplot(
+  visto ~ tipo_url,
+  data = tabla_enlaces,
+  main = "Frecuencia de aparición por tipo de URL",
+  xlab = "Tipo de URL",
+  ylab = "Frecuencia de aparición",
+  col = c("skyblue", "lightgreen"),
+  horizontal = FALSE
+)
+```
+
+## Pregunta 2: Un gráfico de barras indicando la suma de enlaces que apuntan a otros dominios o servicios (distinto a <https://www.mediawiki.org> en el caso de ejemplo) vs. la suma de los otros enlaces.
+
+### Aquí queremos distinguir enlaces que apuntan a mediawiki versus el resto. Sabemos que las URLs relativas ya apuntan dentro, por lo tanto hay que analizar las URLs absolutas y comprobar que apunten a <https://www.mediawiki.org.>
+
+Para este gráfico se clasificaron los enlaces en dos grandes grupos:
+
+-   **MediaWiki**: enlaces internos, incluyendo tanto las URLs relativas como las URLs absolutas que apuntan al dominio [`https://www.mediawiki.org`](https://www.mediawiki.org)
+-   **Externo**: enlaces absolutos que apuntan a otros dominios o servicios distintos
+
+Posteriormente, se calculó la suma de apariciones (`visto`) para cada categoría, obteniendo así una medida agregada del peso de los enlaces internos frente a los externos dentro de la página analizada.
+
+Se utilizó `na.rm = TRUE` al realizar la suma para evitar que valores faltantes (`NA`) afectaran el resultado final.
+
+```{r}
+# Clasificar enlaces como internos (MediaWiki) o externos
+tabla_enlaces$tipo_dominio <- ifelse(
+  is.na(tabla_enlaces$enlace),
+  NA,
+  ifelse(
+    grepl("^https?://", tabla_enlaces$enlace),
+    ifelse(grepl("^https?://www\\.mediawiki\\.org", tabla_enlaces$enlace),
+           "MediaWiki",
+           "Externo"),
+    "MediaWiki"
+  )
+)
+
+# Verificación rápida
+table(tabla_enlaces$tipo_dominio, useNA = "ifany")
+
+# Sumar la frecuencia de aparición por categoría
+suma_dominios <- tapply(
+  tabla_enlaces$visto,
+  tabla_enlaces$tipo_dominio,
+  sum,
+  na.rm = TRUE
+)
+
+suma_dominios
+
+# Gráfico de barras con base R
+barplot(
+  suma_dominios,
+  main = "Enlaces internos vs externos",
+  ylab = "Suma de apariciones",
+  col = c("forestgreen", "tomato")
+)
+```
+
+**Versión con qplot**
+
+```{r}
+library(ggplot2)
+
+df_barras <- data.frame(
+  tipo = names(suma_dominios),
+  total = as.numeric(suma_dominios)
+)
+
+qplot(
+  x = tipo,
+  y = total,
+  data = df_barras,
+  geom = "col",
+  fill = tipo
+) +
+  labs(
+    title = "Enlaces internos vs externos",
+    x = "Tipo de destino",
+    y = "Suma de apariciones"
+  )
+```
+
+Para distinguir entre enlaces internos y externos se utilizó un gráfico de puntos (`dotchart`) en lugar de un gráfico de barras. Este tipo de representación permite comparar de forma directa la suma de apariciones de enlaces que apuntan al dominio de MediaWiki frente a aquellos que dirigen a dominios externos.
+
+Las URLs relativas se consideraron internas por definición, mientras que en las URLs absolutas se comprobó explícitamente si pertenecían o no al dominio [`https://www.mediawiki.org`](https://www.mediawiki.org).
+
+```{r}
+# Clasificar enlaces como internos (MediaWiki) o externos
+tabla_enlaces$tipo_dominio <- ifelse(
+  is.na(tabla_enlaces$enlace),
+  NA,
+  ifelse(
+    grepl("^https?://", tabla_enlaces$enlace),
+    ifelse(
+      grepl("^https?://www\\.mediawiki\\.org", tabla_enlaces$enlace),
+      "MediaWiki",
+      "Externo"
+    ),
+    "MediaWiki"
+  )
+)
+
+# Sumar la frecuencia de aparición por categoría
+suma_dominios <- tapply(
+  tabla_enlaces$visto,
+  tabla_enlaces$tipo_dominio,
+  sum,
+  na.rm = TRUE
+)
+
+dotchart(
+  suma_dominios,
+  main = "Suma de apariciones: MediaWiki vs Externo",
+  xlab = "Suma de apariciones",
+  pch = 19,
+  color = "darkblue"
+)
+```
+
+## Pregunta 3: Un gráfico de tarta (pie chart) indicando los porcentajes de Status de nuestro análisis.
+
+### Por ejemplo, si hay 6 enlaces con status “200” y 4 enlaces con status “404”, la tarta mostrará un 60% con la etiqueta “200” y un 40% con la etiqueta “404”. Este gráfico lo uniremos a los anteriores. El objetivo final es obtener una imagen que recopile los gráficos generados.
+
+Para completar la infografía del análisis, se generó un gráfico de tarta con la distribución porcentual de los códigos de estado HTTP obtenidos durante la validación de enlaces.
+
+En primer lugar, se calculó la frecuencia de cada valor de `status` mediante `table()`. A continuación, se transformaron dichas frecuencias en porcentajes utilizando `prop.table()`, lo que permitió etiquetar cada sector del gráfico con su código HTTP y su peso relativo dentro del conjunto total de enlaces analizados.
+
+Finalmente, este gráfico se integró con el histograma de frecuencias de enlaces absolutos y relativos, y con el gráfico de barras de enlaces internos frente a externos, componiendo una sola figura desde R. De este modo, la infografía resume de manera conjunta la estructura de enlaces y el estado de accesibilidad de los recursos encontrados en la página analizada.
+
+```{r}
+# Tabla de frecuencias de status
+tabla_status <- table(tabla_enlaces$status, useNA = "ifany")
+
+# Porcentajes
+porcentaje_status <- prop.table(tabla_status) * 100
+
+# Etiquetas para el pie chart
+etiquetas_status <- paste0(
+  names(tabla_status),
+  " (",
+  round(porcentaje_status, 1),
+  "%)"
+)
+
+# Gráfico de tarta
+pie(
+  tabla_status,
+  labels = etiquetas_status,
+  main = "Distribución de Status HTTP",
+  col = rainbow(length(tabla_status))
+)
+```
+
+Para representar la distribución porcentual de los códigos de estado HTTP se optó por un gráfico de puntos en lugar de un gráfico de tarta. Esta elección facilita la comparación visual entre categorías y evita las limitaciones habituales de los gráficos circulares cuando existen pocas o muchas diferencias entre proporciones.
+
+El gráfico muestra el peso relativo de cada código de estado dentro del conjunto total de enlaces analizados.
+
+```{r}
+# Tabla de frecuencias de status
+tabla_status <- table(tabla_enlaces$status, useNA = "ifany")
+
+# Porcentajes
+porcentaje_status <- prop.table(tabla_status) * 100
+
+dotchart(
+  porcentaje_status,
+  main = "Porcentaje de Status HTTP",
+  xlab = "Porcentaje",
+  pch = 19,
+  color = "darkred"
+)
+
+text(
+  x = porcentaje_status,
+  y = seq_along(porcentaje_status),
+  labels = paste0(round(porcentaje_status, 1), "%"),
+  pos = 4,
+  cex = 0.8
+)
+```
+
+TODOS LOS GRÁFICOS JUNTOS
+
+```{r}
+# =========================================
+# PREPARACIÓN DE DATOS
+# =========================================
+
+# 1. Clasificación absoluta/relativa
+tabla_enlaces$tipo_url <- ifelse(
+  grepl("^https?://", tabla_enlaces$enlace),
+  "Absoluta",
+  "Relativa"
+)
+
+# 2. Clasificación MediaWiki / Externo
+tabla_enlaces$tipo_dominio <- ifelse(
+  is.na(tabla_enlaces$enlace),
+  NA,
+  ifelse(
+    grepl("^https?://", tabla_enlaces$enlace),
+    ifelse(
+      grepl("^https?://www\\.mediawiki\\.org", tabla_enlaces$enlace),
+      "MediaWiki",
+      "Externo"
+    ),
+    "MediaWiki"
+  )
+)
+
+# Suma de apariciones por dominio
+suma_dominios <- tapply(
+  tabla_enlaces$visto,
+  tabla_enlaces$tipo_dominio,
+  sum,
+  na.rm = TRUE
+)
+
+# Tabla de status
+tabla_status <- table(tabla_enlaces$status, useNA = "ifany")
+porcentaje_status <- prop.table(tabla_status) * 100
+etiquetas_status <- paste0(
+  names(tabla_status),
+  " (",
+  round(porcentaje_status, 1),
+  "%)"
+)
+
+# =========================================
+# INFOGRAFÍA EN UNA SOLA FIGURA
+# =========================================
+
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+# Histograma URLs absolutas
+hist(
+  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Absoluta"],
+  main = "URLs absolutas",
+  xlab = "Frecuencia de aparición",
+  col = "skyblue",
+  border = "white"
+)
+
+# Histograma URLs relativas
+hist(
+  tabla_enlaces$visto[tabla_enlaces$tipo_url == "Relativa"],
+  main = "URLs relativas",
+  xlab = "Frecuencia de aparición",
+  col = "lightgreen",
+  border = "white"
+)
+
+# Barras MediaWiki vs Externo
+barplot(
+  suma_dominios,
+  main = "MediaWiki vs Externo",
+  ylab = "Suma de apariciones",
+  col = c("forestgreen", "tomato")
+)
+
+# Pie chart de status
+pie(
+  tabla_status,
+  labels = etiquetas_status,
+  main = "Status HTTP",
+  col = rainbow(length(tabla_status))
+)
+
+# Restaurar layout
+par(mfrow = c(1, 1))
+```
+
+```{r}
+# =========================
+# PREPARACIÓN DE DATOS
+# =========================
+
+tabla_enlaces$tipo_url <- ifelse(
+  grepl("^https?://", tabla_enlaces$enlace),
+  "Absoluta",
+  "Relativa"
+)
+
+tabla_enlaces$tipo_dominio <- ifelse(
+  is.na(tabla_enlaces$enlace),
+  NA,
+  ifelse(
+    grepl("^https?://", tabla_enlaces$enlace),
+    ifelse(
+      grepl("^https?://www\\.mediawiki\\.org", tabla_enlaces$enlace),
+      "MediaWiki",
+      "Externo"
+    ),
+    "MediaWiki"
+  )
+)
+
+suma_dominios <- tapply(
+  tabla_enlaces$visto,
+  tabla_enlaces$tipo_dominio,
+  sum,
+  na.rm = TRUE
+)
+
+tabla_status <- table(tabla_enlaces$status, useNA = "ifany")
+porcentaje_status <- prop.table(tabla_status) * 100
+
+# =========================
+# INFOGRAFÍA EN UNA SOLA FIGURA
+# =========================
+
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+
+# 1. Boxplot URLs absolutas vs relativas
+boxplot(
+  visto ~ tipo_url,
+  data = tabla_enlaces,
+  main = "Frecuencia por tipo de URL",
+  xlab = "Tipo de URL",
+  ylab = "Frecuencia",
+  col = c("skyblue", "lightgreen")
+)
+
+# 2. Dotchart MediaWiki vs Externo
+dotchart(
+  suma_dominios,
+  main = "MediaWiki vs Externo",
+  xlab = "Suma de apariciones",
+  pch = 19,
+  color = "darkblue"
+)
+
+# 3. Dotchart de status HTTP
+dotchart(
+  porcentaje_status,
+  main = "Porcentaje de Status HTTP",
+  xlab = "Porcentaje",
+  pch = 19,
+  color = "darkred"
+)
+
+text(
+  x = porcentaje_status,
+  y = seq_along(porcentaje_status),
+  labels = paste0(round(porcentaje_status, 1), "%"),
+  pos = 4,
+  cex = 0.8
+)
+
+# 4. Densidad de frecuencia de aparición
+plot(
+  density(tabla_enlaces$visto, na.rm = TRUE),
+  main = "Densidad de frecuencia de enlaces",
+  xlab = "Frecuencia de aparición",
+  col = "purple",
+  lwd = 2
+)
+
+par(mfrow = c(1, 1))
 ```
