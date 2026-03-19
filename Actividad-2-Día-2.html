@@ -394,19 +394,19 @@ url_base &lt;- &quot;https://www.mediawiki.org/wiki/MediaWiki&quot;
 # 1. Descargar la página web
 respuesta &lt;- GET(url_base)
 
-# Verificar código de estado HTTP
+# Verifica código de estado HTTP
 respuesta$status_code</code></pre>
 <pre><code>## [1] 200</code></pre>
-<pre class="r"><code># 2. Obtener el contenido HTML como texto
+<pre class="r"><code># 2. Obtiene el contenido HTML como texto
 contenido_html &lt;- content(respuesta, as = &quot;text&quot;, encoding = &quot;UTF-8&quot;)
 
-# Ver una parte del HTML descargado
+# Visualiza una parte del HTML descargado
 substr(contenido_html, 1, 500)</code></pre>
-<pre><code>## [1] &quot;&lt;!DOCTYPE html&gt;\n&lt;html class=\&quot;client-nojs vector-feature-language-in-header-disabled vector-feature-language-in-main-page-header-disabled vector-feature-page-tools-pinned-disabled vector-feature-toc-pinned-clientpref-1 vector-feature-main-menu-pinned-disabled vector-feature-limited-width-clientpref-1 vector-feature-limited-width-content-disabled vector-feature-custom-font-size-clientpref-1 vector-feature-appearance-pinned-clientpref-1 skin-theme-clientpref-day vector-sticky-header-enabled vector-&quot;</code></pre>
-<pre class="r"><code># 3. Convertir el HTML a un objeto analizable en R
+<pre><code>## [1] &quot;&lt;!DOCTYPE html&gt;\n&lt;html class=\&quot;client-nojs vector-feature-language-in-header-disabled vector-feature-language-in-main-menu-disabled vector-feature-language-in-main-page-header-disabled vector-feature-page-tools-pinned-disabled vector-feature-toc-pinned-clientpref-1 vector-feature-main-menu-pinned-disabled vector-feature-limited-width-clientpref-1 vector-feature-limited-width-content-disabled vector-feature-custom-font-size-clientpref-1 vector-feature-appearance-pinned-clientpref-1 skin-theme-clien&quot;</code></pre>
+<pre class="r"><code># 3. Convierte el HTML a un objeto analizable en R
 doc_html &lt;- htmlParse(contenido_html, asText = TRUE)
 
-# Mostrar el tipo de objeto creado
+# Muestra el tipo de objeto creado
 class(doc_html)</code></pre>
 <pre><code>## [1] &quot;HTMLInternalDocument&quot; &quot;HTMLInternalDocument&quot; &quot;XMLInternalDocument&quot; 
 ## [4] &quot;XMLAbstractDocument&quot;</code></pre>
@@ -441,10 +441,10 @@ mediante <code>xmlValue</code>, se extrajo el contenido textual de dicha
 etiqueta.</p>
 <p>De esta forma se obtuvo el título principal de la página analizada,
 que corresponde a la información de cabecera del documento HTML.</p>
-<pre class="r"><code># Buscar el contenido de la etiqueta &lt;title&gt;
+<pre class="r"><code># Busca el contenido de la etiqueta &lt;title&gt;
 titulo_pagina &lt;- xpathSApply(doc_html, &quot;//title&quot;, xmlValue)
 
-# Mostrar resultado
+# Muestra el resultado
 titulo_pagina</code></pre>
 <pre><code>## [1] &quot;MediaWiki&quot;</code></pre>
 <pre class="r"><code>titulo_pagina &lt;- xpathSApply(doc_html, &quot;//title&quot;, xmlValue)
@@ -483,13 +483,13 @@ mediante <code>unlist()</code>.</p>
 <p>Finalmente, se construyó un <code>data.frame</code> con dos columnas:
 el texto del enlace y su URL asociada, dejando los datos listos para su
 análisis posterior.</p>
-<pre class="r"><code># Extraer las URLs de los enlaces (&lt;a href=&quot;...&quot;&gt;)
+<pre class="r"><code># Extrae las URLs de los enlaces (&lt;a href=&quot;...&quot;&gt;)
 urls_enlaces &lt;- xpathSApply(doc_html, &quot;//a&quot;, xmlGetAttr, &quot;href&quot;)
 
-# Extraer el texto visible de los enlaces
+# Extrae el texto visible de los enlaces
 texto_enlaces &lt;- xpathSApply(doc_html, &quot;//a&quot;, xmlValue)
 
-# Si xpathSApply devuelve listas por presencia de NULLs, tratarlas
+# Si xpathSApply devuelve listas por presencia de NULLs, las trata
 if (is.list(urls_enlaces)) {
   valores_nulos_url &lt;- sapply(urls_enlaces, is.null)
   urls_enlaces[valores_nulos_url] &lt;- NA
@@ -502,11 +502,11 @@ if (is.list(texto_enlaces)) {
   texto_enlaces &lt;- unlist(texto_enlaces)
 }
 
-# Convertir cadenas vacías en NA para dejarlo más limpio
+# Convierte cadenas vacías en NA para dejarlo más limpio
 urls_enlaces[urls_enlaces == &quot;&quot;] &lt;- NA
 texto_enlaces[texto_enlaces == &quot;&quot;] &lt;- NA
 
-# Ver algunos resultados
+# Visualiza algunos resultados
 head(urls_enlaces)</code></pre>
 <pre><code>## [1] &quot;#bodyContent&quot;                                
 ## [2] &quot;/wiki/MediaWiki&quot;                             
@@ -517,7 +517,7 @@ head(urls_enlaces)</code></pre>
 <pre class="r"><code>head(texto_enlaces)</code></pre>
 <pre><code>## [1] &quot;Jump to content&quot; &quot;Main page&quot;       &quot;Get MediaWiki&quot;   &quot;Get extensions&quot; 
 ## [5] &quot;Tech blog&quot;       &quot;Contribute&quot;</code></pre>
-<pre class="r"><code># Crear una tabla preliminar con texto y URL
+<pre class="r"><code># Crea una tabla preliminar con texto y URL
 enlaces_df &lt;- data.frame(
   texto = texto_enlaces,
   url = urls_enlaces,
@@ -556,7 +556,7 @@ destino.</p>
 <pre class="r"><code># Tabla de frecuencias por URL
 frecuencia_urls &lt;- table(enlaces_df$url)
 
-# Añadir a cada fila el número de veces que aparece su misma URL
+# Añade a cada fila el número de veces que aparece su misma URL
 enlaces_df$veces_visto &lt;- as.numeric(frecuencia_urls[enlaces_df$url])
 
 # Ver tabla resultante
@@ -568,7 +568,7 @@ head(enlaces_df)</code></pre>
 ## 4  Get extensions /wiki/Special:MyLanguage/Category:Extensions           1
 ## 5       Tech blog              https://techblog.wikimedia.org/           1
 ## 6      Contribute   /wiki/Special:MyLanguage/How_to_contribute           2</code></pre>
-<pre class="r"><code># Si quieres verla completa con nombres más claros
+<pre class="r"><code># Tabla completa con nombres más claros
 tabla_enlaces &lt;- data.frame(
   enlace = enlaces_df$url,
   texto = enlaces_df$texto,
@@ -584,6 +584,175 @@ head(tabla_enlaces)</code></pre>
 ## 4 /wiki/Special:MyLanguage/Category:Extensions  Get extensions     1
 ## 5              https://techblog.wikimedia.org/       Tech blog     1
 ## 6   /wiki/Special:MyLanguage/How_to_contribute      Contribute     2</code></pre>
+</div>
+</div>
+<div id="pregunta-5-para-cada-enlace-seguirlo-e-indicar-si-está-activo-podemos-usar-el-código-de-status-http-al-hacer-una-petición-a-esa-url." class="section level2">
+<h2>Pregunta 5: Para cada enlace, seguirlo e indicar si está activo
+(podemos usar el código de status HTTP al hacer una petición a esa
+URL).</h2>
+<div id="en-este-paso-podemos-usar-la-funcion-head-de-la-libreria-httr-que-en-vez-de-descargarse-la-página-como-haría-get-solo-consultamos-los-atributos-de-la-página-o-fichero-destino.-head-nos-retorna-una-lista-de-atributos-y-de-entre-estos-hay-uno-llamado-header-que-contiene-mas-atributos-sobre-la-pagina-buscada.-si-seguimos-podemos-encontrar-el-status_code-en-resultadostatus_code.-el-status_code-nos-indica-el-resultado-de-la-peticion-de-pagina-o-fichero.-este-código-puede-indicar-que-la-petición-ha-sido-correcta-200-que-no-se-ha-encontrado-404-que-el-acceso-está-restringido-403-etc." class="section level3">
+<h3>En este paso podemos usar la función HEAD de la librería “httr”, que
+en vez de descargarse la página como haría GET, solo consultamos los
+atributos de la página o fichero destino. HEAD nos retorna una lista de
+atributos, y de entre estos hay uno llamado “header” que contiene más
+atributos sobre la página buscada. Si seguimos podemos encontrar el
+“status_code” en “resultado$status_code”. El “status_code” nos indica el
+resultado de la petición de página o fichero. Este código puede indicar
+que la petición ha sido correcta (200), que no se ha encontrado (404),
+que el acceso está restringido (403), etc.</h3>
+<div id="tened-en-cuenta-que-hay-enlaces-con-la-url-relativa-con-forma-xxxxxxxxxxxa.html." class="section level4">
+<h4>Tened en cuenta que hay enlaces con la URL relativa, con forma
+“/xxxxxx/xxxxx/a.html”.</h4>
+</div>
+<div id="en-este-caso-podemos-indicarle-como-handle-el-dominio-de-la-página-que-estamos-tratando-o-añadirle-el-dominio-a-la-url-con-la-funcion-paste." class="section level4">
+<h4>En este caso, podemos indicarle como “handle” el dominio de la
+página que estamos tratando, o añadirle el dominio a la URL con la
+función “paste”.</h4>
+</div>
+<div id="tened-en-cuenta-que-puede-haber-enlaces-externos-con-la-url-absoluta-con-forma-httpxxxxxxxxxxa.html-o-https-que-los-trataremos-directamente." class="section level4">
+<h4>Tened en cuenta que puede haber enlaces externos con la URL
+absoluta, con forma “<a href="http://xxxxxx/xxxx/a.html%E2%80%9D" class="uri">http://xxxxxx/xxxx/a.html”</a> (o https), que los trataremos
+directamente.</h4>
+</div>
+<div id="tened-en-cuenta-que-puede-haber-enlaces-que-apunten-a-subdominios-distintos-con-forma-subdominioxxxxxxxxa.html." class="section level4">
+<h4>Tened en cuenta que puede haber enlaces que apunten a subdominios
+distintos, con forma “//subdominio/xxxx/xxxx/a.html”.</h4>
+</div>
+<div id="en-este-caso-podemos-adjuntarle-el-prefijo-https-delante-convirtiendo-la-url-en-absoluta.-tened-en-cuenta-urls-internas-con-tags-como-por-ejemplo-search-p." class="section level4">
+<h4>En este caso podemos adjuntarle el prefijo “https:” delante,
+convirtiendo la URL en absoluta. Tened en cuenta URLS internas con tags,
+como por ejemplo “#search-p”.</h4>
+</div>
+<div id="estos-apuntan-a-la-misma-página-en-la-que-estamos-pero-diferente-altura-de-página.-equivale-a-acceder-a-la-url-relativa-de-la-misma-página-en-la-que-estamos." class="section level4">
+<h4>Estos apuntan a la misma página en la que estamos, pero diferente
+altura de página. Equivale a acceder a la URL relativa de la misma
+página en la que estamos.</h4>
+<p>En este paso se verificó si cada enlace encontrado estaba activo,
+utilizando para ello la función <code>HEAD()</code> del paquete
+<code>httr</code>.</p>
+<p>A diferencia de <code>GET()</code>, la función <code>HEAD()</code> no
+descarga el contenido completo del recurso, sino que consulta únicamente
+sus cabeceras HTTP, permitiendo obtener el código de estado
+(<code>status_code</code>) de manera más ligera.</p>
+<p>Antes de realizar la validación, fue necesario normalizar las URLs
+extraídas, ya que en la página aparecen distintos tipos de enlaces:</p>
+<ul>
+<li>enlaces absolutos (<a href="https://..."><code>https://...</code></a>)</li>
+<li>enlaces relativos (<code>/wiki/...</code>)</li>
+<li>enlaces con subdominios y protocolo relativo
+(<code>//...</code>)</li>
+<li>enlaces internos con anclas (<code>#...</code>)</li>
+</ul>
+<p>Cada uno de estos casos se transformó en una URL válida para poder
+consultar correctamente su estado.</p>
+<p>Posteriormente, se recorrió la lista de enlaces y se lanzó una
+petición <code>HEAD()</code> sobre cada uno, almacenando el código de
+retorno HTTP correspondiente. Además, se añadió una pausa de un segundo
+entre peticiones mediante <code>Sys.sleep(1)</code> para evitar generar
+demasiadas solicitudes consecutivas al servidor.</p>
+<p>Finalmente, se incorporó el código de estado a la tabla de
+resultados, obteniendo un <code>data.frame</code> con el texto del
+enlace, la URL original, el número de veces que aparece y el estado HTTP
+asociado.</p>
+<pre class="r"><code># Dominio base
+dominio_base &lt;- &quot;https://www.mediawiki.org&quot;
+
+# Función para normalizar URLs
+normalizar_url &lt;- function(u, url_base, dominio_base) {
+  if (is.na(u) || u == &quot;&quot;) {
+    return(NA_character_)
+  }
+  
+  # URL absoluta
+  if (grepl(&quot;^https?://&quot;, u)) {
+    return(u)
+  }
+  
+  # URL con protocolo relativo (ej: //subdominio/...)
+  if (grepl(&quot;^//&quot;, u)) {
+    return(paste0(&quot;https:&quot;, u))
+  }
+  
+  # Anchor interno (#algo)
+  if (grepl(&quot;^#&quot;, u)) {
+    return(url_base)
+  }
+  
+  # URL relativa al dominio
+  if (grepl(&quot;^/&quot;, u)) {
+    return(paste0(dominio_base, u))
+  }
+  
+  # Cualquier otro caso se trata como relativo al dominio
+  return(paste0(dominio_base, &quot;/&quot;, u))
+}
+
+# Aplica normalización
+tabla_enlaces$url_normalizada &lt;- sapply(
+  tabla_enlaces$enlace,
+  normalizar_url,
+  url_base = url_base,
+  dominio_base = dominio_base,
+  USE.NAMES = FALSE
+)
+
+# Función para consultar status HTTP con HEAD
+obtener_status &lt;- function(u) {
+  if (is.na(u) || u == &quot;&quot;) {
+    return(NA_integer_)
+  }
+  
+  resultado &lt;- tryCatch(
+    {
+      r &lt;- HEAD(u)
+      r$status_code
+    },
+    error = function(e) {
+      NA_integer_
+    }
+  )
+  
+  # Espera corta para no saturar el servidor
+  Sys.sleep(0.2)
+  
+  return(resultado)
+}
+
+# Archivo donde se guardará el resultado
+archivo_cache &lt;- &quot;tabla_enlaces_status.rds&quot;
+
+# Si ya existe el archivo guardado, cargarlo
+if (file.exists(archivo_cache)) {
+  tabla_enlaces &lt;- readRDS(archivo_cache)
+} else {
+  # Obtener status solo una vez
+  tabla_enlaces$status &lt;- sapply(
+    tabla_enlaces$url_normalizada,
+    obtener_status,
+    USE.NAMES = FALSE
+  )
+  
+  # Guardar resultado para reutilizarlo
+  saveRDS(tabla_enlaces, archivo_cache)
+}
+
+# Visualizar resultados
+head(tabla_enlaces)</code></pre>
+<pre><code>##                                         enlace           texto visto
+## 1                                 #bodyContent Jump to content     1
+## 2                              /wiki/MediaWiki       Main page     5
+## 3                               /wiki/Download   Get MediaWiki     1
+## 4 /wiki/Special:MyLanguage/Category:Extensions  Get extensions     1
+## 5              https://techblog.wikimedia.org/       Tech blog     1
+## 6   /wiki/Special:MyLanguage/How_to_contribute      Contribute     2
+##                                                         url_normalizada status
+## 1                              https://www.mediawiki.org/wiki/MediaWiki    200
+## 2                              https://www.mediawiki.org/wiki/MediaWiki    200
+## 3                               https://www.mediawiki.org/wiki/Download    200
+## 4 https://www.mediawiki.org/wiki/Special:MyLanguage/Category:Extensions    200
+## 5                                       https://techblog.wikimedia.org/    200
+## 6   https://www.mediawiki.org/wiki/Special:MyLanguage/How_to_contribute    200</code></pre>
+</div>
 </div>
 </div>
 </div>

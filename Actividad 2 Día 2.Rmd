@@ -1,3 +1,9 @@
+---
+title: "Actividad Evaluable 2"
+author: "Angel Renato Burga Valdivia"
+output: html_document
+---
+
 # PARTE 1
 
 # Datos Elegantes + Análisis de Datos con Web Scrapping
@@ -154,5 +160,125 @@ tabla_enlaces <- data.frame(
   stringsAsFactors = FALSE
 )
 
+head(tabla_enlaces)
+```
+
+## Pregunta 5: Para cada enlace, seguirlo e indicar si está activo (podemos usar el código de status HTTP al hacer una petición a esa URL).
+
+### En este paso podemos usar la función HEAD de la librería “httr”, que en vez de descargarse la página como haría GET, solo consultamos los atributos de la página o fichero destino. HEAD nos retorna una lista de atributos, y de entre estos hay uno llamado “header” que contiene más atributos sobre la página buscada. Si seguimos podemos encontrar el “status_code” en “resultado\$status_code”. El “status_code” nos indica el resultado de la petición de página o fichero. Este código puede indicar que la petición ha sido correcta (200), que no se ha encontrado (404), que el acceso está restringido (403), etc.
+
+#### Tened en cuenta que hay enlaces con la URL relativa, con forma “/xxxxxx/xxxxx/a.html”. 
+
+#### En este caso, podemos indicarle como “handle” el dominio de la página que estamos tratando, o añadirle el dominio a la URL con la función “paste”. 
+
+#### Tened en cuenta que puede haber enlaces externos con la URL absoluta, con forma “<http://xxxxxx/xxxx/a.html”> (o https), que los trataremos directamente. 
+
+#### Tened en cuenta que puede haber enlaces que apunten a subdominios distintos, con forma “//subdominio/xxxx/xxxx/a.html”. 
+
+#### En este caso podemos adjuntarle el prefijo “https:” delante, convirtiendo la URL en absoluta. Tened en cuenta URLS internas con tags, como por ejemplo “#search-p”. 
+
+#### Estos apuntan a la misma página en la que estamos, pero diferente altura de página. Equivale a acceder a la URL relativa de la misma página en la que estamos.
+
+En este paso se verificó si cada enlace encontrado estaba activo, utilizando para ello la función `HEAD()` del paquete `httr`.
+
+A diferencia de `GET()`, la función `HEAD()` no descarga el contenido completo del recurso, sino que consulta únicamente sus cabeceras HTTP, permitiendo obtener el código de estado (`status_code`) de manera más ligera.
+
+Antes de realizar la validación, fue necesario normalizar las URLs extraídas, ya que en la página aparecen distintos tipos de enlaces:
+
+-   enlaces absolutos ([`https://...`](https://...))
+-   enlaces relativos (`/wiki/...`)
+-   enlaces con subdominios y protocolo relativo (`//...`)
+-   enlaces internos con anclas (`#...`)
+
+Cada uno de estos casos se transformó en una URL válida para poder consultar correctamente su estado.
+
+Posteriormente, se recorrió la lista de enlaces y se lanzó una petición `HEAD()` sobre cada uno, almacenando el código de retorno HTTP correspondiente. Además, se añadió una pausa de un segundo entre peticiones mediante `Sys.sleep(1)` para evitar generar demasiadas solicitudes consecutivas al servidor.
+
+Finalmente, se incorporó el código de estado a la tabla de resultados, obteniendo un `data.frame` con el texto del enlace, la URL original, el número de veces que aparece y el estado HTTP asociado.
+
+```{r}
+# Dominio base
+dominio_base <- "https://www.mediawiki.org"
+
+# Función para normalizar URLs
+normalizar_url <- function(u, url_base, dominio_base) {
+  if (is.na(u) || u == "") {
+    return(NA_character_)
+  }
+  
+  # URL absoluta
+  if (grepl("^https?://", u)) {
+    return(u)
+  }
+  
+  # URL con protocolo relativo (ej: //subdominio/...)
+  if (grepl("^//", u)) {
+    return(paste0("https:", u))
+  }
+  
+  # Anchor interno (#algo)
+  if (grepl("^#", u)) {
+    return(url_base)
+  }
+  
+  # URL relativa al dominio
+  if (grepl("^/", u)) {
+    return(paste0(dominio_base, u))
+  }
+  
+  # Cualquier otro caso se trata como relativo al dominio
+  return(paste0(dominio_base, "/", u))
+}
+
+# Aplica normalización
+tabla_enlaces$url_normalizada <- sapply(
+  tabla_enlaces$enlace,
+  normalizar_url,
+  url_base = url_base,
+  dominio_base = dominio_base,
+  USE.NAMES = FALSE
+)
+
+# Función para consultar status HTTP con HEAD
+obtener_status <- function(u) {
+  if (is.na(u) || u == "") {
+    return(NA_integer_)
+  }
+  
+  resultado <- tryCatch(
+    {
+      r <- HEAD(u)
+      r$status_code
+    },
+    error = function(e) {
+      NA_integer_
+    }
+  )
+  
+  # Espera corta para no saturar el servidor
+  Sys.sleep(0.2)
+  
+  return(resultado)
+}
+
+# Archivo donde se guardará el resultado
+archivo_cache <- "tabla_enlaces_status.rds"
+
+# Si ya existe el archivo guardado, cargarlo
+if (file.exists(archivo_cache)) {
+  tabla_enlaces <- readRDS(archivo_cache)
+} else {
+  # Obtener status solo una vez
+  tabla_enlaces$status <- sapply(
+    tabla_enlaces$url_normalizada,
+    obtener_status,
+    USE.NAMES = FALSE
+  )
+  
+  # Guardar resultado para reutilizarlo
+  saveRDS(tabla_enlaces, archivo_cache)
+}
+
+# Visualizar resultados
 head(tabla_enlaces)
 ```
