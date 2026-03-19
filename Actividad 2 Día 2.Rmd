@@ -5,7 +5,10 @@ author:
   - "Fidel Garcia"
   - "Ofelia Tejada"
   - "Jesus Hurtado"
-output: html_document
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
 ---
 
 # PARTE 1
