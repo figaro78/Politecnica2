@@ -163,7 +163,6 @@ Para tratar las URLs podemos usar la ayuda de la función “paste”, para man
 cadenas de caracteres y poder añadir prefijos a las URLs si fuera necesario.
 
 
-
 #Funcion para normalizar la URL
 normalize_url <- function(links, base_url){
 if (is.na(links)) return(NA)
